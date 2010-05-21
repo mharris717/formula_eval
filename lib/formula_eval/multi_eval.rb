@@ -29,7 +29,8 @@ class MultiEval
     objs.each do |obj|
       if obj.respond_to?(sym)
         res = obj.send(sym,*args,&b)
-        return MultiEval.new(:objs => [res]+without_obj(obj)) if res
+        #return MultiEval.new(:objs => [res]+without_obj(obj)) #if res
+        return res
       end
     end
     raise 'none respond'
@@ -52,5 +53,8 @@ class MultiEval
     mylog 'get_nested', :obj => obj, :method_str => method_str, :other => other
     arr = [other,obj]
     new(:objs => arr)
+  end
+  def to_unwrapped
+    objs.first.to_unwrapped
   end
 end

@@ -57,4 +57,8 @@ describe "FormulaEval" do
     self.str = '=year'
     formula.result.should == 2010
   end
+  # it 'double 3' do
+  #   hash = {'year' => 2010, 'pension' => [{'start_year' => 2025, 'perc' => 0.65},{'start_year' => 2026, 'perc' => 0.7}]}
+  #   self.row = MultiEval.get_nested(Wrapper.new(hash),'pension')
+  # end
 end

@@ -5,9 +5,6 @@ class Object
   attr_accessor :calculating_formula
 end
 
-
-  
-
 class FormulaEval
   attr_accessor :row, :formula, :row_index, :rows
   include FromHash
@@ -31,14 +28,14 @@ class FormulaEval
   end
   def safe_eval_result
     instance_eval(formula).to_unwrapped
-  # rescue => exp
-  #   t = exp.backtrace.join("\n").gsub("/Users/mharris/.rvm/gems/ruby-1.9.1-p378/gems","gems").gsub("/Users/mharris/Code/smartlist/vendor/mongo_ui","mongo_ui")
-  #   t = t.gsub("/Users/mharris/Code/smartlist","smartlist")
-  #   mylog "formula_eval", :formula => formula, :row => row, :message => exp.message, :trace => t
-  #   "Error #{exp.message}"
   rescue => exp
+    t = exp.backtrace.join("\n").gsub("/Users/mharris/.rvm/gems/ruby-1.9.1-p378/gems","gems").gsub("/Users/mharris/Code/smartlist/vendor/mongo_ui","mongo_ui")
+    t = t.gsub("/Users/mharris/Code/smartlist","smartlist")
+    mylog "formula_eval", :formula => formula, :row => row, :message => exp.message, :trace => t
+    "Error #{exp.message}"
+  #rescue => exp
     # puts "error evaling #{formula} against #{row.inspect}, #{exp.message}"
-    raise exp
+    #raise exp
   end
   def result
     self.formula = formula[1..-1] if formula[0..0] == '='
@@ -66,14 +63,26 @@ class FormulaEval
   end
 end
 
-load File.dirname(__FILE__) + "/formula_eval/wrapper.rb"
-load File.dirname(__FILE__) + "/formula_eval/calculating_collection.rb"
-load File.dirname(__FILE__) + "/formula_eval/multi_eval.rb"
 
-def mylog(*args)
-  yield if block_given?
-  #puts args.inspect if args.first == 'enriched_doc' or args.first == 'dot_set'
+
+class FormulaEval
+  def self.load_subfiles!
+    load File.dirname(__FILE__) + "/formula_eval/wrapper.rb"
+    load File.dirname(__FILE__) + "/formula_eval/calculating_collection.rb"
+    load File.dirname(__FILE__) + "/formula_eval/multi_eval.rb"
+  end
+  def self.load_self!
+    load File.dirname(__FILE__) + "/formula_eval.rb"
+  end
+  def self.load_files!
+    load_subfiles!
+    load_self!
+  end
 end
+
+FormulaEval.load_subfiles!
+
+
 
 class Object
   def klass
@@ -115,30 +124,50 @@ class Object
     end
     res
   end
-  def dot_set(str,val)
-    mylog 'dot_set', :str => str, :val => val, :self => self do
+  def dot_set(str,val=nil,&b)
+    #mylog 'dot_set', :str => str, :val => val, :self => self do
       return self[str] = val if str.split(".").size == 1
       strs = str.split(".")[0..-2]
       lst = str.split(".")[-1]
       obj = dot_get(strs)
       return obj unless obj
       #puts "dot_set, obj is #{obj.inspect}, str is #{str}, val is #{val}, lst is #{lst}"
-      obj.nested_set(lst,val)
-    end
+      # begin
+        obj.nested_set(lst,val,&b)
+      # rescue => exp
+      #      raise "#{obj.inspect} #{lst} #{val}"
+      #    end
+    #end
   end
 end
 
 class Object
-  def nested_set(k,v)
+  def nested_set(k,v=nil,&b)
+    v = yield(self) if block_given?
     self[k] = v
   end
 end
 
 class Array
-  def nested_set(k,v)
-    mylog 'dot_set', :context => 'nested', :klass => klass, :self => self, :k => k, :v => v do
-      each { |x| x.nested_set(k,v) } 
-    end
+  def nested_set(k,v=nil)
+    # raise 'foo' if block_given?
+    #mylog 'dot_set', :context => 'nested', :klass => klass, :self => self, :k => k, :v => v do
+      each do |x| 
+        v = yield(x) if block_given?
+        x.nested_set(k,v) 
+      end
+    #end
+  end
+end
+
+class ArrayWrapper
+  def nested_set(k,v=nil)
+    #mylog 'dot_set', :context => 'nested', :klass => klass, :self => self, :k => k, :v => v do
+      each do |x| 
+        v = yield(x) if block_given?
+        x.nested_set(k,v) 
+      end
+    #end
   end
 end
 

@@ -7,3 +7,8 @@ require 'spec/autorun'
 Spec::Runner.configure do |config|
   
 end
+
+def mylog(*args)
+  yield if block_given?
+  #puts args.inspect if args.first == 'enriched_doc' or args.first == 'dot_set'
+end

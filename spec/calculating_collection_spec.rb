@@ -23,4 +23,12 @@ describe "CalculatingCollection" do
     self.str = '=year+1'
     enriched['pension']['perc_plus_salary'].should == 2026
   end
+  it 'sub array' do
+    self.row['pension'] = [{'year' => 2025, 'perc' => 0.65},{'year' => 2026, 'perc' => 0.7}]
+    enriched['pension'][0]['perc_plus_salary'].should == 42000.0*0.65
+  end
+  it 'reverse uniq' do
+    a = [1,2,3,4,5,2,7]
+    a.reverse.uniq.reverse.should == [1,3,4,5,2,7]
+  end
 end
