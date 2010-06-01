@@ -45,7 +45,7 @@ class FormulaEval
     MultiEval.fix_str(formula)
   end
   def safe_eval_result
-    my_instance_eval(fixed_formula).to_unwrapped
+    instance_eval(fixed_formula).to_unwrapped
   rescue => exp
      t = exp.backtrace.join("\n").gsub("/Users/mharris/.rvm/gems/ruby-1.9.1-p378/gems","gems").gsub("/Users/mharris/Code/smartlist/vendor/mongo_ui","mongo_ui")
      t = t.gsub("/Users/mharris/Code/smartlist","smartlist")

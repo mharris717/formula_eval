@@ -50,7 +50,7 @@ class MultiEval
   end
   def self.get_nested(obj,method_str)
     method_str = fix_str(method_str)
-    other = obj.to_wrapped.my_instance_eval(method_str)
+    other = obj.to_wrapped.instance_eval(method_str)
     mylog 'get_nested', :obj => obj, :method_str => method_str, :other => other
     arr = [other,obj]
     new(:objs => arr)
