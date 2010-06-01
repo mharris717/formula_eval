@@ -33,13 +33,51 @@ class HashWrapper
     obj[k.to_s] = v
   end
   def obj; hash; end
+  def to_wrapped
+    self
+  end
   def to_unwrapped
     hash.to_unwrapped
   end
   def respond_to?(sym)
     obj.keys.include?(sym.to_s)
   end
+  def delete(k)
+    obj.delete(k)
+  end
+  def kind_of?(x)
+    return true if x == Hash
+    super
+  end
+  def keys
+    obj.keys
+  end
 end
+
+class Array
+  def contains_all_hashes?
+    all? { |x| x.kind_of?(Hash) || x.kind_of?(OrderedHash) }
+  end
+end
+
+class Array
+  def method_missing(sym,*args,&b)
+    if sym.to_s =~ /_arrayindex_(\d+)/
+      self[$1.to_i].to_wrapped
+    else
+      super
+    end 
+  end
+end
+
+module ArrayMod
+  def [](i)
+    raise "tried to pass string #{i} to array [] #{inspect}" unless i.kind_of?(Fixnum)
+    super
+  end
+end
+
+Array.send(:include,ArrayMod)
 
 class ArrayWrapper
   attr_accessor :obj
@@ -48,19 +86,33 @@ class ArrayWrapper
     map { |h| h[sym.to_s] }.select { |x| x }.flatten.to_wrapped
   end
   def method_missing(sym,*args,&b)
-    if obj.respond_to?(sym)
+    res = if obj.respond_to?(sym)
       obj.send(sym,*args,&b).to_wrapped
-    elsif contains_all_hashes?
+    elsif sym.to_s =~ /_arrayindex_(\d+)/
+      self[$1.to_i]
+    elsif obj.contains_all_hashes?
       hash_mm(sym)
     else
       obj.send(sym,*args,&b).to_wrapped
     end
+    res
+  end
+  def [](i)
+    raise "tried to pass string #{i} to array [] #{inspect}" unless i.kind_of?(Fixnum)
+    obj[i].to_wrapped
   end
   def *(arg)
     map { |x| x * arg }
   end
+  def to_wrapped
+    self
+  end
   def to_unwrapped
     obj.to_unwrapped
+  end
+  def kind_of?(x)
+    return true if x == Array
+    super
   end
 end
 

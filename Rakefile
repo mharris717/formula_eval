@@ -11,6 +11,9 @@ begin
     gem.homepage = "http://github.com/mharris717/formula_eval"
     gem.authors = ["Mike Harris"]
     gem.add_development_dependency "rspec", ">= 1.2.9"
+    gem.add_dependency 'mharris_ext'
+    gem.add_dependency 'nested_hash_tricks'
+    gem.add_dependency 'safe_eval'
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new

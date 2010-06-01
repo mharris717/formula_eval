@@ -20,11 +20,19 @@ class B
   end
 end
 
-def bt
-  raise 'foo'
-rescue => exp
-  puts exp.message
-  puts exp.backtrace.join("\n")
+class C
+  def c
+    3
+  end
+  def c_array
+    [{'d' => 4, 'e' => 5},{'d' => 6, 'e' => 7}]
+  end
+  def c_hash
+    {'d' => 4, 'e' => 5}
+  end
+  def [](k)
+    send(k)
+  end
 end
 
 describe "FormulaEval" do
@@ -37,9 +45,6 @@ describe "FormulaEval" do
   it 'double_year' do
     self.str = '=year*2'
     formula.result.should == 4020
-  end
-  it 'nested' do
-    
   end
   it 'double' do
     self.row = MultiEval.new(:objs => [A.new,B.new])
@@ -56,6 +61,36 @@ describe "FormulaEval" do
     self.row = {'year' => 2010, 'pension' => {'start_year' => 2025, 'perc' => 0.65}}
     self.str = '=year'
     formula.result.should == 2010
+  end
+  it 'nested with array' do
+    self.row = MultiEval.get_nested(C.new,'c_array._arrayindex_0')
+    row.objs[0].obj.should == {'d' => 4, 'e' => 5}
+  end
+  it 'nested with array 2' do
+    MultiEval.fix_str('c_array.0').should == 'c_array._arrayindex_0'
+    MultiEval.fix_str('c_array.0.d').should == 'c_array._arrayindex_0.d'
+  end
+  it 'nested with array 3' do
+    self.row = MultiEval.get_nested(C.new,'c_array.0')
+    row.objs[0].obj.should == {'d' => 4, 'e' => 5}
+    self.str = '=c+c_array.0.d'
+    formula.result.should == 7
+  end
+  it 'nested with array 4' do
+    self.row = MultiEval.get_nested(C.new,'c_array.0')
+    self.str = '=c+d'
+    formula.result.should == 7
+  end
+  it 'nested with array 5' do
+    self.row = MultiEval.get_nested(C.new,'c_array.1')
+    self.str = '=c+d'
+    formula.result.should == 9
+  end
+  it 'nested with array' do
+    self.row = MultiEval.get_nested(C.new,'c_array._arrayindex_0')
+    #raise row.objs.inspect
+    self.str = '=c+d'
+    formula.result.should == 7
   end
   # it 'double 3' do
   #   hash = {'year' => 2010, 'pension' => [{'start_year' => 2025, 'perc' => 0.65},{'start_year' => 2026, 'perc' => 0.7}]}
